@@ -1,0 +1,28 @@
+<html>
+<head>
+  <title>Games</title>
+  <link rel="stylesheet" type="text/css" href="style.css" >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js" charset="utf-8"></script>
+</head>
+<script>
+  function getGames() {
+    $.post('/getGames',function(result) {
+      var listContent = "";
+      for (let i = 0;i < result.length; i++) {
+        listContent += "<a href='/?id=" + result[i].gameID + "'><li>" + result[i].gameName + "</li></a>";
+      }
+      $("#gameList").append(listContent);
+    });
+  }
+
+  $(document).ready(getGames);
+</script>
+<body>
+<div class="gameList">
+  <ul id="gameList">
+  </ul>
+</div>
+<h1>Game List</h1>
+</body>
+</html>

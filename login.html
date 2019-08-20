@@ -1,0 +1,36 @@
+<html>
+<head>
+  <title>Venner For Livet</title>
+  <link rel="stylesheet" type="text/css" href="style.css" >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js" charset="utf-8"></script>
+</head>
+<script>
+  function getUrlVars()
+  {
+    var vars = [], hash;
+    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++)
+    {
+      hash = hashes[i].split('=');
+      vars.push(hash[0]);
+      vars[hash[0]] = hash[1];
+    }
+    return vars;
+  }
+
+</script>
+<body>
+<h1>Login</h1>
+<div class="loginForm">
+  <form action="/Login" method="post" id="loginForm">
+    <input type="text" placeholder="Player name" name="playerName" id="playerName"><br>
+    <input type="hidden" value="" name="gameID" id="gameID"><br>
+    <input type="submit" name="submit" id="submit">
+  </form>
+</div>
+</body>
+<script>
+$("#gameID").attr("value", getUrlVars()['id']);
+</script>
+</html>
