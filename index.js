@@ -99,7 +99,7 @@ http.listen(3000, function() {
 
 //Basic Socket connection and disconnect messages
 io.on("connection", function(socket) {
-  console.log("User connected");
+  console.log("user connected");
   socket.on('disconnect', function() {
     console.log("User disconnected");
   });
@@ -143,6 +143,20 @@ app.post("/getPlayers", function(req, res) {
     res.send(result);
   });
 })
+
+app.post("/StartGame", function(req, res) {
+  var gameID = req.body.gameID;
+  var sql = "UPDATE `games` SET `gameHasStarted`=1 WHERE `gameID`=" + gameID +";";
+  conn.query(sql, function(err, result, fields) {
+    console.log(result);
+    res.send(result);
+  });
+})
+
+app.post("/socketManager", function(req, res) {
+  
+})
+
 
 
 //404 error

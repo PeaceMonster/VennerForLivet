@@ -8,17 +8,6 @@
 </head>
 <script type="text/javascript">
   var socket = io();
-
-  function startGame() {
-    var localgameID = getUrlVars()['id'];
-    $.post('/StartGame', {
-      gameID = localgameID
-    })
-  }
-
-  function vote(name) {
-
-  }
   function getUrlVars()
   {
     var vars = [], hash;
@@ -31,6 +20,18 @@
     }
     return vars;
   }
+
+  function startGame() {
+    var localgameID = getUrlVars()['id'];
+    $.post('/StartGame', {
+      gameID : localgameID
+    });
+  }
+
+  function vote(name) {
+
+  }
+
 
   $(document).ready(function() {
     var localgameID = getUrlVars()['id'];
@@ -48,6 +49,12 @@
       }
       $("#lobbyList").append(playerList);
       $("#votingList").append(playerList);
+    });
+    $.post('/socketManager', {
+      gameID:localgameID,
+      command:"joinRoom"
+    }, function(data, status) {
+      console.log(data);
     });
   });
 </script>
