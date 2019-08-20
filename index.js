@@ -111,7 +111,7 @@ app.post("/Login", function(req, res) {
   req.session.playerID = playerID.toString();
   req.session.gameID = req.body.gameID;
   console.log(req.body);
-  var sql = "insert into spillere (spillerID, playerName, gameID) values ('" + req.session.playerID + "'," + conn.escape(req.session.playerName) + "," + conn.escape(req.body.gameID) + ");";
+  var sql = "INSERT INTO `spillere`(`spillerID`, `playerName`, `gameID`, `sessionID`) VALUES ('" + req.session.playerID + "'," + conn.escape(req.session.playerName) + "," + conn.escape(req.body.gameID) + ",'" + req.sessionID + "');";
   console.log(sql);
   conn.query(sql, function(err, result, fields) {
     if (err) throw err;

@@ -10,9 +10,10 @@
   var socket = io();
 
   function startGame() {
-    $("#lobby").slideUp("slow", function() {
-      $("#voting").slideDown("slow");
-    });
+    var localgameID = getUrlVars()['id'];
+    $.post('/StartGame', {
+      gameID = localgameID
+    })
   }
 
   function vote(name) {
