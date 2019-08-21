@@ -36,7 +36,11 @@ app.use(session({
   secret: 'Mikkelerutroligsød',
   store: sessionStore,
   resave: false,
-  saveUninitialized: false
+  rolling: true,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 600*1000,
+  }
 }));
 
 conn.connect(function(err) {
@@ -97,9 +101,13 @@ http.listen(3000, function() {
   console.log('Listening on port 3000');
 });
 
-//Basic Socket connection and disconnect messages
+//Basic Socket connection and disconnect messages and join room
 io.on("connection", function(socket) {
   console.log("user connected");
+  socket.on('joinRoom', function(roomNumber) {
+    socket.join(roomNumber);
+    console.log('User connected to: ' + roomNumber);
+  });
   socket.on('disconnect', function() {
     console.log("User disconnected");
   });
@@ -152,11 +160,6 @@ app.post("/StartGame", function(req, res) {
     res.send(result);
   });
 })
-
-app.post("/socketManager", function(req, res) {
-  
-})
-
 
 
 //404 error

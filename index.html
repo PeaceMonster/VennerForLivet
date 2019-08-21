@@ -8,6 +8,13 @@
 </head>
 <script type="text/javascript">
   var socket = io();
+
+  socket.on('connect', function() {
+    socket.emit('joinRoom', getUrlVars()['id'], function(data) {
+      console.log(data);
+    });
+  });
+
   function getUrlVars()
   {
     var vars = [], hash;
@@ -20,6 +27,11 @@
     }
     return vars;
   }
+
+  socket.on("startGame", function() {
+    
+  })
+
 
   function startGame() {
     var localgameID = getUrlVars()['id'];
