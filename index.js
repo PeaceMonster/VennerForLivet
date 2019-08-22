@@ -33,7 +33,7 @@ var sessionStore = new mySqlStore({
 
 app.use(session({
   key: 'playerName',
-  secret: 'Mikkelerutroligsød',
+  secret: 'DlS&xs#uKBZv!8vD8Q*oA#N!h^S&6tts',
   store: sessionStore,
   resave: false,
   rolling: true,
@@ -129,7 +129,11 @@ io.on("connection", function(socket) {
     var sql = "UPDATE `spillere` SET `hasVoted`=0 WHERE `gameID`=" + roomNumber + ";"
     conn.query(sql);
     io.to(roomNumber).emit('nextQ');
-    io.to(roomNumber).emit('newQ', 'New Q');
+    var qID = Math.floor(Math.random() * 291) + 1
+    var sql = 'select question from questions where ID=' + qID + ';';
+    conn.query(sql, function(err, result) {
+      io.to(roomNumber).emit('newQ', result[0].question);
+    });
   });
   socket.on('disconnect', function() {
     console.log("User disconnected");
@@ -142,7 +146,7 @@ app.post("/Login", function(req, res) {
   req.session.playerID = playerID.toString();
   req.session.gameID = req.body.gameID;
   console.log(req.body);
-  var sql = "INSERT INTO `spillere`(`spillerID`, `playerName`, `gameID`, `sessionID`) VALUES ('" + req.session.playerID + "'," + conn.escape(req.session.playerName) + "," + conn.escape(req.body.gameID) + ",'" + req.sessionID + "');";
+  var sql = "INSERT INTO `spillere`(`spillerID`, `playerName`, `gameID`, `sessionID`) VALUES ('" + req.session.playerID + "'," + conn.escape(req.session.playerName) + "," + conn.escape(req.body.gameID) + ",'" + req.session.id + "');";
   console.log(sql);
   conn.query(sql, function(err, result, fields) {
     if (err) throw err;
@@ -188,7 +192,11 @@ app.post("/StartGame", function(req, res) {
   conn.query(sql, function(err, result, fields) {
     console.log(result);
     res.send(result);
-    io.in(gameID).emit('newQ', 'StartQ');
+    var qID = Math.floor(Math.random() * 291) + 1
+    var sql = 'select question from questions where ID=' + qID + ';';
+    conn.query(sql, function(err, result) {
+      io.in(gameID).emit('newQ', result[0].question);
+    });
     io.in(gameID).emit("startGame", "startGame");
   });
 })
@@ -197,10 +205,30 @@ app.post('/getID', function(req, res) {
   res.send(req.session.playerID);
 })
 
-
-
-
 //404 error
 app.get("*",function(req, res) {
   res.sendFile(__dirname + "/404.html");
 })
+
+setInterval(function() {
+  var sql = 'select spillerID,sessionID from spillere';
+  conn.query(sql, function(err, allPlayers) {
+    sql = 'select `session_id` from sessions';
+    conn.query(sql, function(err, allSessions) {
+      var isPlaying = false;
+      for (let i = 0; i < allPlayers.length; i ++) {
+        isPlaying = false;
+        for (let j = 0; j < allSessions.length; j++) {
+          if (allPlayers[i].sessionID == allSessions[j].session_id) {
+            isPlaying = true;
+          }
+        }
+        if (!isPlaying) {
+          sql = 'DELETE FROM `spillere` WHERE `spillerID`="' + allPlayers[i].spillerID + '";';
+          conn.query(sql);
+          console.log('Player removed');
+        }
+      }
+    });
+  });
+}, 60000);

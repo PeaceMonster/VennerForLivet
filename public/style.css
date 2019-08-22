@@ -33,7 +33,7 @@ h3 {
 
 div.loginForm {
   position: absolute;
-  top: 15%;
+  top: 20%;
   left: 2%;
   display: inline-block;
 }
@@ -55,7 +55,7 @@ div.loginForm #submit {
 div.gameList {
   background-color: rgba(255, 255, 255, 0.7);
   position: absolute;
-  width: 50%;
+  width: 90%;
   height: 70%;
   top: 20%;
   left: 2%;
@@ -84,7 +84,7 @@ div.gameList li:hover {
 div.lobby {
   background-color: rgba(255, 255, 255, 0.7);
   position: absolute;
-  width: 50%;
+  width: 90%;
   height: 70%;
   top: 20%;
   left: 2%;
@@ -122,11 +122,11 @@ div.voting {
   top: 15%;
   left: 2%;
   height: 70%;
-  width: 50%;
+  width: 90%;
 }
 div.voting h2 {
   color: white;
-  font-size: 40px;
+  font-size: 30px;
 }
 div.voting ul {
   list-style-type: none;
@@ -147,9 +147,9 @@ div.voting .votingList li:hover {
 div.waiting {
   background-color: rgba(255, 255, 255, 0.7);
   position: absolute;
-  width: 50%;
-  height: 65%;
-  top: 25%;
+  width: 90%;
+  height: 60%;
+  top: 30%;
   left: 2%;
   display: inline-block;
   border-radius: 20px;
