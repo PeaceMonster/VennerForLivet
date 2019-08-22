@@ -9,6 +9,10 @@
 <script type="text/javascript">
   var socket = io();
 
+  var localPlayerID = "";
+  var players = {};
+  var roomNumber = getUrlVars()['id'];
+
   socket.on('connect', function() {
     socket.emit('joinRoom', getUrlVars()['id'], function(data) {
       console.log(data);
@@ -29,59 +33,113 @@
   }
 
   socket.on("startGame", function() {
-    
+    $("#lobby").slideUp("slow",function() {
+      $("#voting").slideDown("slow");
+    });
   })
 
+  socket.on('next', function() {
+    $("#next").show();
+  })
 
   function startGame() {
-    var localgameID = getUrlVars()['id'];
     $.post('/StartGame', {
-      gameID : localgameID
+      gameID : roomNumber
     });
+  }
+
+  socket.on('nextQ', function() {
+    $('#waiting').slideUp('slow', function() {
+      for (var key in players) {
+        $("#" + key).text(players[key]);
+        $("#" + key).css("color","black");
+      }
+      $("#votingList").slideDown('slow');
+    });
+    $('#next').hide();
+    for (var key in players) {
+      $("#" + key).text(players[key]);
+      $("#" + key).css("color","black");
+    }
+
+  });
+
+  socket.on('newQ', function(question) {
+    $("#question").text(question);
+  });
+
+  function sendNext() {
+    socket.emit('nextQ', roomNumber);
   }
 
   function vote(name) {
-
+    console.log(name);
+    socket.emit('vote', roomNumber, name, localPlayerID);
+    $("#votingList").hide();
+    $("#waiting").slideDown("slow");
   }
+
+  socket.on('inVote', function(voter, playerID) {
+    $('#' + voter).css('color','red');
+    $('#' + voter).text(players[voter]);
+    $('#' + voter).append(': ' + players[playerID]);
+  });
 
 
   $(document).ready(function() {
-    var localgameID = getUrlVars()['id'];
     $.post('/GameName', {
-      gameID:localgameID
+      gameID:roomNumber
     }, function(data, status) {
       $("#gameName").text(data);
     });
+    $.post('/getID', {}, function(data, status) {
+      localPlayerID = data;
+      console.log(localPlayerID);
+    });
     $.post('/getPlayers', {
-      gameID:localgameID
+      gameID:roomNumber
     }, function(data, status) {
+      for (let i = 0; i < data.length; i++) {
+        players[data[i].spillerID] = data[i].playerName;
+      }
       var playerList = "";
       for (let i = 0; i < data.length; i++) {
         playerList += "<li>" + data[i].playerName + "</li>";
       }
       $("#lobbyList").append(playerList);
+      playerList = "";
+      for (let i = 0; i < data.length; i++) {
+        playerList += "<li id='" + data[i].spillerID + "'>" + data[i].playerName + "</li>";
+      }
+      $("#waitingList").append(playerList);
+      playerList = "";
+      for (let i = 0; i < data.length; i++) {
+        playerList += "<li onclick='vote(" + data[i].spillerID + ")'>" + data[i].playerName + "</li>";
+      }
       $("#votingList").append(playerList);
     });
-    $.post('/socketManager', {
-      gameID:localgameID,
-      command:"joinRoom"
-    }, function(data, status) {
-      console.log(data);
+    $.post('/getState', {
+      gameID:roomNumber
+      }, function(data, status) {
+        if (data.gameStage == "1") {
+          $("#lobby").hide();
+          $("#voting").show();
+        }
     });
   });
 </script>
 <body>
 <div class="lobby" id="lobby"  >
   <button type="button" name="StartGame" onclick="startGame()">Start Game</button>
-<ul id="lobbyList">
-
-</ul>
+  <ul id="lobbyList" class="lobbyStyle"></ul>
 </div>
 <div class="voting" id="voting" style="display: none">
   <h2 id="question">Spørgsmål</h2>
-<ul id="votingList">
-
-</ul>
+  <ul id="votingList" class="votingList"></ul>
+</div>
+<div class="waiting" id="waiting" style="display: none;">
+  <ul id="waitingList"></ul>
+  <button id="next" style="display: none" onclick="sendNext()">Næste Spørgsmål</button>
 </div>
 <h1 class="gameName" id="gameName"></h1>
 </body>

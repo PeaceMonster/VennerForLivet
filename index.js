@@ -39,7 +39,7 @@ app.use(session({
   rolling: true,
   saveUninitialized: false,
   cookie: {
-    maxAge: 600*1000,
+    maxAge: 1800*1000,
   }
 }));
 
@@ -108,6 +108,29 @@ io.on("connection", function(socket) {
     socket.join(roomNumber);
     console.log('User connected to: ' + roomNumber);
   });
+  socket.on('vote', function(roomNumber, playerID, sender) {
+    io.to(roomNumber).emit('inVote', sender, playerID);
+    var sql = 'UPDATE `spillere` SET `hasVoted`=1 WHERE `gameID`=' + conn.escape(roomNumber) + ' and `spillerID`=' + conn.escape(sender) + ';'
+    conn.query(sql, function(err, result) {
+      var sql = 'select * from `spillere` where `gameID`=' + conn.escape(roomNumber) + ';';
+      conn.query(sql, function(err, playerTotal) {
+        var sql = 'select * from `spillere` where `gameID`=' + conn.escape(roomNumber) + ' and `hasVoted`=1;';
+        conn.query(sql, function(err, playerVoted) {
+          if (playerTotal.length <= playerVoted.length) {
+            io.to(roomNumber).emit('next');
+            console.log('next');
+          }
+        });
+      });
+    });
+  });
+  socket.on('nextQ', function(roomNumber) {
+    console.log('True');
+    var sql = "UPDATE `spillere` SET `hasVoted`=0 WHERE `gameID`=" + roomNumber + ";"
+    conn.query(sql);
+    io.to(roomNumber).emit('nextQ');
+    io.to(roomNumber).emit('newQ', 'New Q');
+  });
   socket.on('disconnect', function() {
     console.log("User disconnected");
   });
@@ -145,21 +168,36 @@ app.post("/GameName", function(req, res) {
 })
 
 app.post("/getPlayers", function(req, res) {
-  var sql = "SELECT playerName from spillere where gameID=" + conn.escape(req.body.gameID) + ";";
+  var sql = "SELECT playerName,spillerID from spillere where gameID=" + conn.escape(req.body.gameID) + ";";
   conn.query(sql, function(err, result, fields) {
     console.log(result);
     res.send(result);
   });
 })
 
+app.post("/getState", function(req, res) {
+  var sql = "SELECT gameStage from games where gameID=" + req.body.gameID + ";";
+  conn.query(sql, function(err, result) {
+    res.send(result[0]);
+  });
+})
+
 app.post("/StartGame", function(req, res) {
   var gameID = req.body.gameID;
-  var sql = "UPDATE `games` SET `gameHasStarted`=1 WHERE `gameID`=" + gameID +";";
+  var sql = "UPDATE `games` SET `gameHasStarted`=1,gameStage=1 WHERE `gameID`=" + gameID +";";
   conn.query(sql, function(err, result, fields) {
     console.log(result);
     res.send(result);
+    io.in(gameID).emit('newQ', 'StartQ');
+    io.in(gameID).emit("startGame", "startGame");
   });
 })
+
+app.post('/getID', function(req, res) {
+  res.send(req.session.playerID);
+})
+
+
 
 
 //404 error
