@@ -28,7 +28,10 @@ var sessionStore = new mySqlStore({
   port:"3306",
   user:"root",
   password:"",
-  database:"vennerForLivet"
+  database:"vennerForLivet",
+  clearExpired: true,
+  checkExpirationInterval: 60 * 1000,
+  expiration: 60*1000
 });
 
 app.use(session({
@@ -39,7 +42,7 @@ app.use(session({
   rolling: true,
   saveUninitialized: false,
   cookie: {
-    maxAge: 1800*1000,
+    maxAge: 60*1000,
   }
 }));
 
@@ -106,6 +109,7 @@ io.on("connection", function(socket) {
   console.log("user connected");
   socket.on('joinRoom', function(roomNumber) {
     socket.join(roomNumber);
+    socket.to(roomNumber).emit('newPlayer');
     console.log('User connected to: ' + roomNumber);
   });
   socket.on('vote', function(roomNumber, playerID, sender) {
@@ -208,6 +212,10 @@ app.post('/getID', function(req, res) {
 //404 error
 app.get("*",function(req, res) {
   res.sendFile(__dirname + "/404.html");
+})
+
+app.get('/refreshSession', function(req, res) {
+  res.send('Ok');
 })
 
 setInterval(function() {
