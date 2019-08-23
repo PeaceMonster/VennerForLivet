@@ -239,4 +239,23 @@ setInterval(function() {
       }
     });
   });
+  sql = 'SELECT `gameID` FROM `games` WHERE `gameHasStarted`=1;';
+  conn.query(sql, function(err, gamesStarted) {
+    sql = 'SELECT `gameID` FROM `spillere`;';
+    conn.query(sql, function(err, gamesWithPlayers) {
+      for (let i = 0;i < gamesStarted.length; i++) {
+        var hasPlayers = false;
+        for (let j = 0;j < gamesWithPlayers.length; j++) {
+          if (gamesStarted[i].gameID == gamesWithPlayers[j].gameID) {
+            hasPlayers = true;
+          }
+        }
+        if (!hasPlayers) {
+          sql = 'DELETE FROM `games` WHERE `gameID`=' + gamesStarted[i].gameID + ';'
+          conn.query(sql);
+          console.log('Game Deleted');
+        }
+      }
+    })
+  });
 }, 60000);
