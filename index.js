@@ -160,7 +160,7 @@ app.post("/Login", function(req, res) {
 })
 
 app.post("/getGames", function(req, res) {
-  var sql = "SELECT gameID,gameName from games where gameHasStarted=0;";
+  var sql = "SELECT gameID,gameName from games where gameHasStarted=0 and private=0;";
   conn.query(sql,function(err, result, fields) {
     console.log(result);
     res.send(result);
