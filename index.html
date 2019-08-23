@@ -1,159 +1,159 @@
 <html>
-<head>
-  <title>Venner For Livet</title>
-  <link rel="stylesheet" type="text/css" href="style.css" >
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js" charset="utf-8"></script>
-  <script src="/socket.io/socket.io.js"></script>
-</head>
-<script type="text/javascript">
-  var socket = io();
+  <head>
+    <title>Venner For Livet</title>
+    <link rel="stylesheet" type="text/css" href="style.css" >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js" charset="utf-8"></script>
+    <script src="/socket.io/socket.io.js"></script>
+  </head>
+  <script type="text/javascript">
+    var socket = io();
 
-  var localPlayerID = "";
-  var players = {};
-  var roomNumber = getUrlVars()['id'];
+    var localPlayerID = "";
+    var players = {};
+    var roomNumber = getUrlVars()['id'];
 
-  socket.on('connect', function() {
-    socket.emit('joinRoom', getUrlVars()['id'], function(data) {
-      console.log(data);
+    socket.on('connect', function() {
+      socket.emit('joinRoom', getUrlVars()['id'], function(data) {
+        console.log(data);
+      });
     });
-  });
 
-  function getUrlVars()
-  {
-    var vars = [], hash;
-    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
-    for(var i = 0; i < hashes.length; i++)
+    function getUrlVars()
     {
-      hash = hashes[i].split('=');
-      vars.push(hash[0]);
-      vars[hash[0]] = hash[1];
+      var vars = [], hash;
+      var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+      for(var i = 0; i < hashes.length; i++)
+      {
+        hash = hashes[i].split('=');
+        vars.push(hash[0]);
+        vars[hash[0]] = hash[1];
+      }
+      return vars;
     }
-    return vars;
-  }
 
-  socket.on("startGame", function() {
-    $("#lobby").slideUp("slow",function() {
-      $("#voting").slideDown("slow");
-    });
-  })
+    socket.on("startGame", function() {
+      $("#lobby").slideUp("slow",function() {
+        $("#voting").slideDown("slow");
+      });
+    })
 
-  socket.on('next', function() {
-    $("#next").show();
-  })
+    socket.on('next', function() {
+      $("#next").show();
+    })
 
-  function startGame() {
-    $.post('/StartGame', {
-      gameID : roomNumber
-    });
-  }
+    function startGame() {
+      $.post('/StartGame', {
+        gameID : roomNumber
+      });
+    }
 
-  socket.on('nextQ', function() {
-    $('#waiting').slideUp('slow', function() {
+    socket.on('nextQ', function() {
+      $('#waiting').slideUp('slow', function() {
+        for (var key in players) {
+          $("#" + key).text(players[key]);
+          $("#" + key).css("color","black");
+        }
+        $("#votingList").slideDown('slow');
+      });
+      $('#next').hide();
       for (var key in players) {
         $("#" + key).text(players[key]);
         $("#" + key).css("color","black");
       }
-      $("#votingList").slideDown('slow');
+
     });
-    $('#next').hide();
-    for (var key in players) {
-      $("#" + key).text(players[key]);
-      $("#" + key).css("color","black");
+
+    socket.on('newQ', function(question) {
+      $("#question").text(question);
+    });
+
+    function getPlayers() {
+      $.post('/getPlayers', {
+        gameID:roomNumber
+      }, function(data, status) {
+        for (let i = 0; i < data.length; i++) {
+          players[data[i].spillerID] = data[i].playerName;
+        }
+        var playerList = "";
+        for (let i = 0; i < data.length; i++) {
+          playerList += "<li>" + data[i].playerName + "</li>";
+        }
+        $("#lobbyList").text('')
+        $("#lobbyList").append(playerList);
+        playerList = "";
+        for (let i = 0; i < data.length; i++) {
+          playerList += "<li id='" + data[i].spillerID + "'>" + data[i].playerName + "</li>";
+        }
+        $("#waitingList").text('');
+        $("#waitingList").append(playerList);
+        playerList = "";
+        for (let i = 0; i < data.length; i++) {
+          playerList += "<li onclick='vote(" + data[i].spillerID + ")'>" + data[i].playerName + "</li>";
+        }
+        $("#votingList").text('');
+        $("#votingList").append(playerList);
+      });
     }
 
-  });
+    function sendNext() {
+      socket.emit('nextQ', roomNumber);
+    }
 
-  socket.on('newQ', function(question) {
-    $("#question").text(question);
-  });
+    function vote(name) {
+      console.log(name);
+      $.get('/refreshSession', function(data, status) {
+        console.log(data);
+      });
+      socket.emit('vote', roomNumber, name, localPlayerID);
+      $("#votingList").hide();
+      $("#waiting").slideDown("slow");
+    }
 
-  function getPlayers() {
-    $.post('/getPlayers', {
-      gameID:roomNumber
-    }, function(data, status) {
-      for (let i = 0; i < data.length; i++) {
-        players[data[i].spillerID] = data[i].playerName;
-      }
-      var playerList = "";
-      for (let i = 0; i < data.length; i++) {
-        playerList += "<li>" + data[i].playerName + "</li>";
-      }
-      $("#lobbyList").text('')
-      $("#lobbyList").append(playerList);
-      playerList = "";
-      for (let i = 0; i < data.length; i++) {
-        playerList += "<li id='" + data[i].spillerID + "'>" + data[i].playerName + "</li>";
-      }
-      $("#waitingList").text('');
-      $("#waitingList").append(playerList);
-      playerList = "";
-      for (let i = 0; i < data.length; i++) {
-        playerList += "<li onclick='vote(" + data[i].spillerID + ")'>" + data[i].playerName + "</li>";
-      }
-      $("#votingList").text('');
-      $("#votingList").append(playerList);
+    socket.on('inVote', function(voter, playerID) {
+      $('#' + voter).css('color','red');
+      $('#' + voter).text(players[voter]);
+      $('#' + voter).append(': ' + players[playerID]);
     });
-  }
 
-  function sendNext() {
-    socket.emit('nextQ', roomNumber);
-  }
-
-  function vote(name) {
-    console.log(name);
-    $.get('/refreshSession', function(data, status) {
-      console.log(data);
+    socket.on('newPlayer', function() {
+      getPlayers();
     });
-    socket.emit('vote', roomNumber, name, localPlayerID);
-    $("#votingList").hide();
-    $("#waiting").slideDown("slow");
-  }
 
-  socket.on('inVote', function(voter, playerID) {
-    $('#' + voter).css('color','red');
-    $('#' + voter).text(players[voter]);
-    $('#' + voter).append(': ' + players[playerID]);
-  });
-
-  socket.on('newPlayer', function() {
-    getPlayers();
-  });
-
-  $(document).ready(function() {
-    $.post('/GameName', {
-      gameID:roomNumber
-    }, function(data, status) {
-      $("#gameName").text(data);
-    });
-    $.post('/getID', {}, function(data, status) {
-      localPlayerID = data;
-      console.log(localPlayerID);
-    });
-    getPlayers();
-    $.post('/getState', {
-      gameID:roomNumber
+    $(document).ready(function() {
+      $.post('/GameName', {
+        gameID:roomNumber
       }, function(data, status) {
-        if (data.gameStage == "1") {
-          $("#lobby").hide();
-          $("#voting").show();
-        }
+        $("#gameName").text(data);
+      });
+      $.post('/getID', {}, function(data, status) {
+        localPlayerID = data;
+        console.log(localPlayerID);
+      });
+      getPlayers();
+      $.post('/getState', {
+        gameID:roomNumber
+        }, function(data, status) {
+          if (data.gameStage == "1") {
+            $("#lobby").hide();
+            $("#voting").show();
+          }
+      });
     });
-  });
-</script>
-<body>
-<div class="lobby" id="lobby"  >
-  <button type="button" name="StartGame" onclick="startGame()">Start Game</button>
-  <ul id="lobbyList" class="lobbyStyle"></ul>
-</div>
-<div class="voting" id="voting" style="display: none">
-  <h2 id="question">Spørgsmål</h2>
-  <ul id="votingList" class="votingList"></ul>
-</div>
-<div class="waiting" id="waiting" style="display: none;">
-  <ul id="waitingList"></ul>
-  <button id="next" style="display: none" onclick="sendNext()">Næste</button>
-</div>
-<h1 class="gameName" id="gameName"></h1>
-</body>
+  </script>
+  <body>
+    <div class="lobby" id="lobby"  >
+      <button type="button" name="StartGame" onclick="startGame()">Start Game</button>
+      <ul id="lobbyList" class="lobbyStyle"></ul>
+    </div>
+    <div class="voting" id="voting" style="display: none">
+      <h2 id="question">Spørgsmål</h2>
+      <ul id="votingList" class="votingList"></ul>
+    </div>
+    <div class="waiting" id="waiting" style="display: none;">
+      <ul id="waitingList"></ul>
+      <button id="next" style="display: none" onclick="sendNext()">Næste</button>
+    </div>
+    <h1 class="gameName" id="gameName"></h1>
+  </body>
 </html>

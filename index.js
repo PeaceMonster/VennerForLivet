@@ -144,6 +144,25 @@ io.on("connection", function(socket) {
   });
 });
 
+app.get('/createGame', function(req, res) {
+  res.sendFile(__dirname + '/createGame.html');
+})
+
+app.post('/addGame', function(req, res) {
+  var gameID = (Math.floor(Math.random()*100000) + 1);
+  var gameName = conn.escape(req.body.gameName);
+  if (req.body.private) {
+    var privateGame = "1";
+  } else {
+    var privateGame = "0";
+  }
+  var sql = 'INSERT INTO `games`(`gameID`, `gameName`, `gameHasStarted`, `private`, `gameStage`) VALUES (' + gameID + ',' + gameName + ',0,' + privateGame + ',0);';
+  conn.query(sql);
+  console.log(sql);
+  res.redirect('/?id=' + gameID);
+})
+
+
 app.post("/Login", function(req, res) {
   req.session.playerName = req.body.playerName;
   var playerID = (Math.floor(Math.random()*100000) + 1);
